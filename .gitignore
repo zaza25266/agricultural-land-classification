@@ -1,0 +1,47 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Local datasets and model artifacts
+data/
+datasets/
+images_dataSAT/
+*.pth
+*.pt
+*.h5
+*.keras
+*.ckpt
+
+# Local experiment outputs
+runs/
+outputs/
+checkpoints/
