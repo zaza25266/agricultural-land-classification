@@ -217,6 +217,7 @@ Preprocessing must match the actual training pipeline. Differences between train
 **Zubair Ali**
 
 - GitHub: https://github.com/zaza25266
+- Streamlit: https://agricultural-land-classification-dd8w2lljax7hnk8uv7flnh.streamlit.app/
 - Project repository: https://github.com/zaza25266/agricultural-land-classification
 - Model repository: https://huggingface.co/ZubairAli25266/agri-land-classification-models
 
