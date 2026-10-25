@@ -1,0 +1,8 @@
+# requirements.txt
+streamlit>=1.50
+pillow>=10.0
+numpy>=1.26
+huggingface_hub>=0.24
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+tensorflow-cpu>=2.16
