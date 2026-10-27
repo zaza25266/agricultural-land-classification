@@ -1,4 +1,4 @@
-
+```python
 """Load pretrained models and run agricultural-land classification."""
 
 from functools import lru_cache
@@ -29,44 +29,46 @@ CLASS_NAMES = {
 
 
 class ConvNet(nn.Module):
-    """Reconstructed PyTorch CNN architecture for the saved state dictionary."""
+    """CNN using sequential layers with numeric checkpoint keys."""
 
     def __init__(self, num_classes=2):
         super().__init__()
 
+        # Keep the convolutional layers in one Sequential container.
         self.features = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(3, 32, kernel_size=5, padding=2),  # 0
+            nn.ReLU(),                                   # 1
+            nn.MaxPool2d(2),                             # 2
+            nn.BatchNorm2d(32),                          # 3
 
-            nn.Conv2d(32, 64, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(32, 64, kernel_size=5, padding=2), # 4
+            nn.ReLU(),                                   # 5
+            nn.MaxPool2d(2),                             # 6
+            nn.BatchNorm2d(64),                          # 7
 
-            nn.Conv2d(64, 128, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(64, 128, kernel_size=5, padding=2),# 8
+            nn.ReLU(),                                   # 9
+            nn.MaxPool2d(2),                             # 10
+            nn.BatchNorm2d(128),                         # 11
 
-            nn.Conv2d(128, 256, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(256),
+            nn.Conv2d(128, 256, kernel_size=5, padding=2),# 12
+            nn.ReLU(),                                   # 13
+            nn.MaxPool2d(2),                              # 14
+            nn.BatchNorm2d(256),                          # 15
 
-            nn.Conv2d(256, 512, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(512),
+            nn.Conv2d(256, 512, kernel_size=5, padding=2),# 16
+            nn.ReLU(),                                    # 17
+            nn.MaxPool2d(2),                              # 18
+            nn.BatchNorm2d(512),                          # 19
 
-            nn.Conv2d(512, 1024, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(1024),
+            nn.Conv2d(512, 1024, kernel_size=5, padding=2),# 20
+            nn.ReLU(),                                     # 21
+            nn.MaxPool2d(2),                               # 22
+            nn.BatchNorm2d(1024),                          # 23
         )
 
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
+
         self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Linear(1024, 2048),
@@ -106,9 +108,6 @@ def load_pytorch_model():
         filename=PYTORCH_FILENAME,
     )
 
-    model = ConvNet(num_classes=2)
-
-    # Load the weights on CPU for compatibility with hosted deployments.
     try:
         state_dict = torch.load(
             model_path,
@@ -116,18 +115,19 @@ def load_pytorch_model():
             weights_only=True,
         )
     except TypeError:
-        # Compatibility fallback for older PyTorch versions.
         state_dict = torch.load(
             model_path,
             map_location=device,
         )
 
-    # Support either a raw state dictionary or a wrapped checkpoint.
+    # Support checkpoints wrapped in a dictionary.
     if isinstance(state_dict, dict) and "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
 
-    # Do not silently ignore architecture/weight mismatches.
+    # Show checkpoint keys if the architecture does not match.
+    model = ConvNet(num_classes=2)
     model.load_state_dict(state_dict, strict=True)
+
     model.to(device)
     model.eval()
 
@@ -135,13 +135,14 @@ def load_pytorch_model():
 
 
 def predict_keras(image_source):
-    """Return the Keras model's class and probabilities."""
+    """Return the Keras prediction and class probabilities."""
     model = load_keras_model()
     image_array = preprocess_for_keras(image_source)
 
-    # The model returns one sigmoid probability for the agricultural class.
     agricultural_probability = float(
-        np.asarray(model.predict(image_array, verbose=0)).reshape(-1)[0]
+        np.asarray(
+            model.predict(image_array, verbose=0)
+        ).reshape(-1)[0]
     )
 
     probabilities = {
@@ -161,10 +162,9 @@ def predict_keras(image_source):
 
 
 def predict_pytorch(image_source):
-    """Return the PyTorch model's class and probabilities."""
+    """Return the PyTorch prediction and class probabilities."""
     model = load_pytorch_model()
     image_array = preprocess_for_pytorch(image_source)
-
     image_tensor = torch.from_numpy(image_array).float()
 
     with torch.inference_mode():
@@ -172,7 +172,6 @@ def predict_pytorch(image_source):
         probabilities_tensor = F.softmax(logits, dim=1)[0]
 
     probabilities_array = probabilities_tensor.cpu().numpy()
-
     predicted_class = int(np.argmax(probabilities_array))
 
     probabilities = {
@@ -187,3 +186,4 @@ def predict_pytorch(image_source):
         "confidence": probabilities[CLASS_NAMES[predicted_class]],
         "probabilities": probabilities,
     }
+```
