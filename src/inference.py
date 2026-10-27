@@ -42,50 +42,43 @@ DEVICE = torch.device(
 class ConvNet(nn.Sequential):
     def __init__(self, num_classes=2):
         super().__init__(
-            # Block 1
-            nn.Conv2d(3, 32, kernel_size=5, padding=2),    # 0
-            nn.ReLU(),                                     # 1
-            nn.MaxPool2d(2),                               # 2
-            nn.BatchNorm2d(32),                            # 3
+            nn.Conv2d(3, 32, kernel_size=5, padding=2),  # 0
+            nn.ReLU(),                                   # 1
+            nn.MaxPool2d(2),                             # 2
+            nn.BatchNorm2d(32),                          # 3
 
-            # Block 2
-            nn.Conv2d(32, 64, kernel_size=5, padding=2),    # 4
-            nn.ReLU(),                                     # 5
-            nn.MaxPool2d(2),                               # 6
-            nn.BatchNorm2d(64),                            # 7
+            nn.Conv2d(32, 64, kernel_size=5, padding=2),  # 4
+            nn.ReLU(),                                   # 5
+            nn.MaxPool2d(2),                             # 6
+            nn.BatchNorm2d(64),                          # 7
 
-            # Block 3
-            nn.Conv2d(64, 128, kernel_size=5, padding=2),   # 8
-            nn.ReLU(),                                     # 9
-            nn.MaxPool2d(2),                               # 10
-            nn.BatchNorm2d(128),                           # 11
+            nn.Conv2d(64, 128, kernel_size=5, padding=2), # 8
+            nn.ReLU(),                                   # 9
+            nn.MaxPool2d(2),                              # 10
+            nn.BatchNorm2d(128),                          # 11
 
-            # Block 4
-            nn.Conv2d(128, 256, kernel_size=5, padding=2),  # 12
-            nn.ReLU(),                                      # 13
-            nn.MaxPool2d(2),                                # 14
-            nn.BatchNorm2d(256),                            # 15
+            nn.Conv2d(128, 256, kernel_size=5, padding=2),# 12
+            nn.ReLU(),                                    # 13
+            nn.MaxPool2d(2),                              # 14
+            nn.BatchNorm2d(256),                          # 15
 
-            # Block 5
-            nn.Conv2d(256, 512, kernel_size=5, padding=2),  # 16
-            nn.ReLU(),                                      # 17
-            nn.MaxPool2d(2),                                # 18
-            nn.BatchNorm2d(512),                            # 19
+            nn.Conv2d(256, 512, kernel_size=5, padding=2),# 16
+            nn.ReLU(),                                    # 17
+            nn.MaxPool2d(2),                              # 18
+            nn.BatchNorm2d(512),                          # 19
 
-            # Block 6
-            nn.Conv2d(512, 1024, kernel_size=5, padding=2), # 20
-            nn.ReLU(),                                      # 21
-            nn.MaxPool2d(2),                                # 22
+            nn.Conv2d(512, 1024, kernel_size=5, padding=2),# 20
+            nn.ReLU(),                                     # 21
+            nn.MaxPool2d(2),                               # 22
             nn.BatchNorm2d(1024),                           # 23
 
-            # Classification head
-            nn.AdaptiveAvgPool2d((1, 1)),                   # 24
-            nn.Flatten(),                                   # 25
-            nn.Linear(1024, 2048),                          # 26
-            nn.ReLU(),                                      # 27
-            nn.BatchNorm1d(2048),                           # 28
-            nn.Dropout(0.4),                                # 29
-            nn.Linear(2048, num_classes),                   # 30
+            nn.AdaptiveAvgPool2d((1, 1)),                  # 24
+            nn.Flatten(),                                  # 25
+            nn.Linear(1024, 2048),                         # 26
+            nn.ReLU(),                                     # 27
+            nn.BatchNorm1d(2048),                          # 28
+            nn.Dropout(0.4),                               # 29
+            nn.Linear(2048, num_classes),                  # 30
         )
 
 # ------------------------------------------------------------
