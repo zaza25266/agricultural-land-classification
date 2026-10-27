@@ -59,9 +59,10 @@ with st.sidebar:
     selected_model = st.selectbox(
         "Choose a model",
         [
-            "Compare both models",
+           
             "TensorFlow / Keras",
             "PyTorch",
+            "Compare both models",
         ],
     )
 
