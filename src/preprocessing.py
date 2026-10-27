@@ -14,12 +14,26 @@ PYTORCH_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 PYTORCH_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 
+
 def load_rgb_image(image_source):
-    """Load an image from a path or file-like object and convert it to RGB."""
-    if isinstance(image_source, (str, Path)):
-        image = Image.open(image_source)
+    """Load an image from a path, file, or existing PIL Image."""
+
+    if isinstance(image_source, Image.Image):
+        # It is already a PIL image.
+        image = image_source.copy()
+
+    elif isinstance(image_source, (str, Path)):
+        # Load from a file path.
+        with Image.open(image_source) as opened_image:
+            image = opened_image.copy()
+
     else:
-        image = Image.open(image_source)
+        # Load from an uploaded file or file-like object.
+        if hasattr(image_source, "seek"):
+            image_source.seek(0)
+
+        with Image.open(image_source) as opened_image:
+            image = opened_image.copy()
 
     image = ImageOps.exif_transpose(image)
     return image.convert("RGB")
