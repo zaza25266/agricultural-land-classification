@@ -2,10 +2,19 @@
 """Streamlit application for agricultural land classification."""
 
 import streamlit as st
-from PIL import Image
 
-from src.inference import predict_keras, predict_pytorch
+from src.inference import (
+    load_keras_model,
+    load_pytorch_model,
+    predict_keras,
+    predict_pytorch,
+)
+from src.preprocessing import load_rgb_image
 
+
+# ------------------------------------------------------------
+# Page configuration
+# ------------------------------------------------------------
 
 st.set_page_config(
     page_title="Agricultural Land Classification",
@@ -14,18 +23,39 @@ st.set_page_config(
 )
 
 st.title("🌾 Agricultural Land Classification")
+
 st.write(
     "Classify satellite imagery as agricultural or non-agricultural "
-    "using pretrained CNN models built with TensorFlow/Keras and PyTorch."
+    "using trained CNN models built with TensorFlow/Keras and PyTorch."
 )
 
 st.info(
-    "This is an image-level classifier. Predictions apply to the uploaded "
-    "image tile, not individual pixels or specific field boundaries."
+    "This is an image-level classifier. It classifies the uploaded "
+    "image tile, not individual pixels or field boundaries."
 )
+
+
+# ------------------------------------------------------------
+# Cache model loading
+# ------------------------------------------------------------
+
+@st.cache_resource
+def get_pytorch_model():
+    return load_pytorch_model()
+
+
+@st.cache_resource
+def get_keras_model():
+    return load_keras_model()
+
+
+# ------------------------------------------------------------
+# Sidebar
+# ------------------------------------------------------------
 
 with st.sidebar:
     st.header("Model settings")
+
     selected_model = st.selectbox(
         "Choose a model",
         [
@@ -35,52 +65,91 @@ with st.sidebar:
         ],
     )
 
-    st.caption("Models are downloaded from Hugging Face when first needed.")
+    st.caption(
+        "Models are downloaded and loaded when first needed."
+    )
+
+
+# ------------------------------------------------------------
+# Image upload
+# ------------------------------------------------------------
 
 uploaded_file = st.file_uploader(
     "Upload a satellite image",
     type=["jpg", "jpeg", "png", "webp", "tif", "tiff"],
-    help="For the closest match to training data, use a 64 × 64 RGB satellite tile.",
+    help="The models resize images to 64 × 64 before prediction.",
 )
+
+
+# ------------------------------------------------------------
+# Run classification
+# ------------------------------------------------------------
 
 if uploaded_file is not None:
     try:
-        image = Image.open(uploaded_file).convert("RGB")
+        image = load_rgb_image(uploaded_file)
 
-        left, right = st.columns([1, 1])
+        left, right = st.columns(2)
 
         with left:
             st.subheader("Uploaded image")
-            st.image(image, caption=f"Image dimensions: {image.width} × {image.height}",
-                     use_container_width=True)
+
+            st.image(
+                image,
+                caption=f"Original size: {image.width} × {image.height}",
+                use_container_width=True,
+            )
 
         with right:
             st.subheader("Classification")
 
-            if st.button("Classify image", type="primary", use_container_width=True):
+            if st.button(
+                "Classify image",
+                type="primary",
+                use_container_width=True,
+            ):
                 results = []
 
                 if selected_model in (
                     "Compare both models",
                     "TensorFlow / Keras",
                 ):
-                    with st.spinner("Running TensorFlow / Keras model..."):
-                        results.append(predict_keras(image.copy()))
+                    with st.spinner("Running Keras model..."):
+                        keras_model = get_keras_model()
+
+                        result = predict_keras(
+                            image,
+                            model=keras_model,
+                        )
+
+                        results.append(result)
 
                 if selected_model in (
                     "Compare both models",
                     "PyTorch",
                 ):
                     with st.spinner("Running PyTorch model..."):
-                        results.append(predict_pytorch(image.copy()))
+                        pytorch_model = get_pytorch_model()
 
+                        result = predict_pytorch(
+                            image,
+                            model=pytorch_model,
+                        )
+
+                        results.append(result)
+
+                # Display results.
                 for result in results:
                     st.markdown(f"### {result['model']}")
 
                     if result["class_id"] == 1:
-                        st.success(f"Prediction: {result['prediction']}")
+                        st.success(
+                            f"Prediction: {result['prediction']}"
+                        )
                     else:
-                        st.warning(f"Prediction: {result['prediction']}")
+                        st.warning(
+                            f"Prediction: {result['prediction']}"
+                        )
 
                     st.metric(
                         "Predicted-class confidence",
@@ -88,6 +157,7 @@ if uploaded_file is not None:
                     )
 
                     st.write("Class probabilities")
+
                     st.progress(
                         max(
                             0.0,
@@ -101,44 +171,48 @@ if uploaded_file is not None:
                             f"{result['probabilities']['Agricultural']:.2%}"
                         ),
                     )
+
                     st.caption(
                         "Non-agricultural probability: "
                         f"{result['probabilities']['Non-agricultural']:.2%}"
                     )
 
+                # Compare model predictions.
                 if len(results) == 2:
                     st.subheader("Model agreement")
 
                     if results[0]["class_id"] == results[1]["class_id"]:
                         st.success(
-                            f"Both models predict **{results[0]['prediction']}**."
+                            f"Both models predict "
+                            f"**{results[0]['prediction']}**."
                         )
                     else:
                         st.error(
-                            "The models disagree. Review the image and "
-                            "treat this prediction as uncertain."
+                            "The models disagree. Treat the prediction "
+                            "as uncertain."
                         )
 
                 st.caption(
-                    "Confidence is the model's output probability, not a "
-                    "guarantee of real-world correctness."
+                    "Confidence is the model's output probability, "
+                    "not a guarantee of real-world correctness."
                 )
 
     except Exception as exc:
-        st.error(
-            "The image could not be processed or a model failed to load. "
-            "Check the deployment logs for the underlying error."
-        )
+        st.error("Prediction failed.")
+
         with st.expander("Technical details"):
-            st.code(str(exc))
+            st.exception(exc)
 
 else:
-    st.write(
-        "Upload a satellite image to get started. The application will "
-        "load only the model or models you select."
-    )
+    st.write("Upload a satellite image to get started.")
+
+
+# ------------------------------------------------------------
+# Footer
+# ------------------------------------------------------------
 
 st.divider()
+
 st.caption(
     "Educational AI project · PyTorch · TensorFlow/Keras · "
     "Hugging Face · Streamlit"
