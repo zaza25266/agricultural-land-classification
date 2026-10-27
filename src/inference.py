@@ -1,4 +1,4 @@
-```python
+
 """Load pretrained models and run agricultural-land classification."""
 
 from functools import lru_cache
@@ -186,4 +186,4 @@ def predict_pytorch(image_source):
         "confidence": probabilities[CLASS_NAMES[predicted_class]],
         "probabilities": probabilities,
     }
-```
+
